@@ -5,10 +5,9 @@ Model Context Protocol server for vector search using [Qdrant](https://qdrant.te
 ## Features
 
 - **Vector Search**: Search for similar documents using text queries (auto-embedded via Ollama)
-- **Auto-Embedding**: Automatically embed text using Ollama before storage
 - **Collection Management**: List and manage Qdrant collections
-- **Metadata Support**: Store custom metadata with documents
 - **Flexible Output**: Markdown or JSON response formats
+- **Read-Only**: Safe for querying without modifying data
 
 ## Prerequisites
 
@@ -116,22 +115,6 @@ Search documents about "machine learning" in the "papers" collection
 with a similarity threshold of 0.7, return top 10 results as JSON
 ```
 
-### qdrant_upsert
-
-Store or update a document with automatic embedding.
-
-**Parameters:**
-- `collection_name` (string): Target collection name
-- `document_id` (integer): Unique document ID
-- `text` (string): Document text to embed and store
-- `metadata` (object, optional): Additional metadata
-
-**Example:**
-```
-Store the document "The history of AI" with ID 42 in the "papers"
-collection with metadata {"author": "John Doe", "year": 2024}
-```
-
 ### qdrant_list_collections
 
 List all collections in Qdrant with metadata.
@@ -140,18 +123,6 @@ List all collections in Qdrant with metadata.
 - `response_format` (string): "markdown" or "json" (default: markdown)
 
 ## Examples
-
-### Store documents
-
-```python
-# Via Claude/MCP interface
-qdrant_upsert(
-    collection_name="tech_docs",
-    document_id=1,
-    text="Vector databases enable fast similarity search on high-dimensional data",
-    metadata={"category": "databases", "source": "article"}
-)
-```
 
 ### Search documents
 
@@ -191,11 +162,6 @@ MCP Server (server.py)
 3. Qdrant searches for similar vectors
 4. Results returned with scores and metadata
 
-**Upsert**:
-1. User provides text + document ID + optional metadata
-2. Ollama embeds the text → vector
-3. Qdrant stores the point (vector + payload)
-
 ## Error Handling
 
 - **Collection not found**: Ensure collection exists in Qdrant
@@ -219,8 +185,8 @@ ruff check server.py
 
 ## Performance Tips
 
-- **Batch operations**: Store multiple documents efficiently with upsert
-- **Score threshold**: Use `score_threshold` to filter low-relevance results
+- **Score threshold**: Use `score_threshold` to filter low-relevance results and reduce noise
+- **Result limit**: Adjust `limit` parameter to control number of results (1-100)
 - **Embedding model**: Choose based on quality vs. speed tradeoff:
   - `nomic-embed-text`: balanced (recommended)
   - `all-minilm`: fast, lightweight
@@ -238,7 +204,8 @@ ruff check server.py
 - Start Ollama: `ollama serve`
 
 **Issue**: "Collection not found"
-- Create collection: Use `qdrant_upsert` (auto-creates) or Qdrant console
+
+- Create collection: Use Qdrant console or add data through external tools
 
 ## License
 

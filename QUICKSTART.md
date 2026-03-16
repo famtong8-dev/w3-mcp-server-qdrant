@@ -34,7 +34,7 @@ In another terminal, test with the MCP Inspector:
 uv run mcp dev server.py
 ```
 
-Open http://localhost:5173 and test the tools.
+Open [http://localhost:5173](http://localhost:5173) and test the tools.
 
 ## Option 2: Local Installation
 
@@ -99,7 +99,8 @@ python server.py
 ```
 
 2. Restart Claude Desktop
-3. Try asking: "Store a document about machine learning in the 'ml_papers' collection"
+
+3. Try asking: "Search for documents about machine learning in the 'ml_papers' collection"
 
 ## Troubleshooting
 
