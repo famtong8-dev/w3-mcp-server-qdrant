@@ -78,14 +78,17 @@ Then open http://localhost:5173 in your browser.
 
 ### Configure in Claude Desktop
 
-Add to `~/.claude/mcp_servers.json`:
+Edit `~/.claude/mcp_servers.json` and add one of the configurations below:
+
+#### Option 1: Direct Command (Recommended)
+
+After installing with `pip install -e .` or `pip install w3-mcp-server-qdrant`:
 
 ```json
 {
   "mcpServers": {
     "qdrant": {
-      "command": "python",
-      "args": ["/path/to/server.py"],
+      "command": "w3-mcp-server-qdrant",
       "env": {
         "QDRANT_URL": "http://localhost:6333",
         "OLLAMA_BASE_URL": "http://localhost:11434",
@@ -95,6 +98,46 @@ Add to `~/.claude/mcp_servers.json`:
   }
 }
 ```
+
+#### Option 2: Using UVX (Recommended after publishing to PyPI)
+
+Once the package is published to PyPI:
+
+```json
+{
+  "mcpServers": {
+    "qdrant": {
+      "command": "uvx",
+      "args": ["w3-mcp-server-qdrant"],
+      "env": {
+        "QDRANT_URL": "http://localhost:6333",
+        "OLLAMA_BASE_URL": "http://localhost:11434",
+        "OLLAMA_MODEL": "nomic-embed-text"
+      }
+    }
+  }
+}
+```
+
+#### Option 3: Python Module (Legacy)
+
+```json
+{
+  "mcpServers": {
+    "qdrant": {
+      "command": "python",
+      "args": ["-m", "server"],
+      "env": {
+        "QDRANT_URL": "http://localhost:6333",
+        "OLLAMA_BASE_URL": "http://localhost:11434",
+        "OLLAMA_MODEL": "nomic-embed-text"
+      }
+    }
+  }
+}
+```
+
+After updating, restart Claude Desktop for the changes to take effect.
 
 ## Tools
 
