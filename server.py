@@ -11,7 +11,6 @@ import httpx
 from mcp.server.fastmcp import FastMCP, Context
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import PointStruct
 from qdrant_client.http.exceptions import UnexpectedResponse
 
 # Configuration from environment variables
@@ -106,40 +105,6 @@ class SearchInput(BaseModel):
     def validate_query(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("Query text cannot be empty")
-        return v.strip()
-
-
-class UpsertInput(BaseModel):
-    """Input for upserting documents with auto-embedding."""
-    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-
-    collection_name: str = Field(
-        ...,
-        description="Qdrant collection name",
-        min_length=1,
-        max_length=255,
-    )
-    document_id: int = Field(
-        ...,
-        description="Unique document ID (integer)",
-        gt=0,
-    )
-    text: str = Field(
-        ...,
-        description="Document text to embed and store",
-        min_length=1,
-        max_length=50000,
-    )
-    metadata: Optional[dict] = Field(
-        default=None,
-        description="Optional metadata to store with the document (JSON object)",
-    )
-
-    @field_validator("collection_name")
-    @classmethod
-    def validate_collection(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("Collection name cannot be empty")
         return v.strip()
 
 
@@ -260,91 +225,6 @@ async def qdrant_search(params: SearchInput, ctx: Context) -> str:
         await ctx.error(f"Search failed: {type(e).__name__}: {e}")
         return json.dumps({
             "error": f"Search failed: {str(e)}"
-        })
-
-
-@mcp.tool(
-    name="qdrant_upsert",
-    annotations={
-        "title": "Store Document with Auto-Embedding",
-        "readOnlyHint": False,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
-)
-async def qdrant_upsert(params: UpsertInput, ctx: Context) -> str:
-    """Store or update a document with automatic Ollama embedding.
-
-    Embeds the provided text using Ollama, then upserts (creates or updates)
-    the document in the specified Qdrant collection. Metadata is optional.
-
-    Args:
-        params (UpsertInput): Validated parameters:
-            - collection_name (str): Target collection
-            - document_id (int): Unique document ID
-            - text (str): Document text (will be embedded)
-            - metadata (dict, optional): Additional data to store
-
-    Returns:
-        str: Success confirmation or error message
-
-    Examples:
-        - Store document: text="This is a sample document", metadata={"title": "Sample"}
-        - Update existing: document_id=123 (same ID overwrites previous)
-
-    Errors:
-        - Collection not found: "Collection 'xyz' does not exist"
-        - Invalid ID: "Document ID must be a positive integer"
-        - Embedding failed: "Failed to embed document text"
-        - Connection error: "Cannot connect to Qdrant at {url}"
-    """
-    try:
-        await ctx.info(f"Embedding document {params.document_id}...")
-        embedding = await embed_text(params.text)
-
-        if not embedding:
-            return json.dumps({
-                "error": "Failed to generate embedding for document",
-                "document_id": params.document_id,
-            })
-
-        qdrant: AsyncQdrantClient = ctx.request_context.lifespan_context["qdrant"]
-
-        # Prepare payload
-        payload = params.metadata or {}
-        payload["text"] = params.text
-
-        await ctx.info(f"Upserting to collection: {params.collection_name}")
-
-        # Upsert point (works with or without collection existing)
-        await qdrant.upsert(
-            collection_name=params.collection_name,
-            points=[
-                PointStruct(
-                    id=params.document_id,
-                    vector=embedding,
-                    payload=payload,
-                )
-            ],
-        )
-
-        return json.dumps({
-            "success": True,
-            "message": f"Document {params.document_id} stored successfully",
-            "collection": params.collection_name,
-            "embedding_model": OLLAMA_MODEL,
-            "embedding_size": len(embedding),
-        }, indent=2)
-
-    except UnexpectedResponse as e:
-        return json.dumps({
-            "error": f"Qdrant error: {str(e)}"
-        })
-    except Exception as e:
-        await ctx.error(f"Upsert failed: {type(e).__name__}: {e}")
-        return json.dumps({
-            "error": f"Upsert failed: {str(e)}"
         })
 
 
