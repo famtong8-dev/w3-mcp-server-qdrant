@@ -3,13 +3,23 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "qdrant-mcp-server"
+name = "w3-mcp-server-qdrant"
 version = "0.1.0"
 description = "MCP server for vector search with Qdrant and Ollama embeddings"
 readme = "README.md"
-requires-python = ">=3.11"
-license = "MIT"
-authors = [{name = "Your Name", email = "your.email@example.com"}]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "W3 Labs", email = "dev@w3labs.io"}]
+keywords = ["mcp", "qdrant", "vector-search", "ollama", "embeddings"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 
 dependencies = [
     "mcp>=1.0.0",
@@ -26,12 +36,21 @@ dev = [
     "ruff>=0.1.0",
 ]
 
+[project.scripts]
+w3-mcp-server-qdrant = "server:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/w3-mcp-server-qdrant"
+Repository = "https://github.com/yourusername/w3-mcp-server-qdrant"
+Documentation = "https://github.com/yourusername/w3-mcp-server-qdrant#readme"
+Issues = "https://github.com/yourusername/w3-mcp-server-qdrant/issues"
+
 [tool.setuptools]
 py-modules = ["server"]
 
 [tool.black]
 line-length = 100
-target-version = ["py311"]
+target-version = ["py310"]
 
 [tool.ruff]
 line-length = 100

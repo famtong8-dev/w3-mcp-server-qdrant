@@ -3,6 +3,7 @@
 
 import json
 import os
+import asyncio
 from enum import Enum
 from typing import Optional
 from contextlib import asynccontextmanager
@@ -319,5 +320,13 @@ async def qdrant_list_collections(params: ListCollectionsInput, ctx: Context) ->
         })
 
 
+def main():
+    """Entry point for the MCP server."""
+    try:
+        mcp.run()
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        pass
+
+
 if __name__ == "__main__":
-    mcp.run()
+    main()
