@@ -195,24 +195,31 @@ async def qdrant_search(params: SearchInput, ctx: Context) -> str:
                 "matches": matches,
             }, indent=2)
         else:
-            # Markdown format
-            md = f"# Search Results\n\n"
-            md += f"**Query**: {params.query_text}\n"
-            md += f"**Collection**: {params.collection_name}\n"
-            md += f"**Results**: {len(matches)} found\n\n"
+            # JSON format
+            result = {
+                "query": params.query_text,
+                "collection": params.collection_name,
+                "total": len(matches),
+                "results": []   
+            }
 
             if not matches:
-                md += "No documents found."
-            else:
-                for i, match in enumerate(matches, 1):
-                    md += f"## Result {i}\n"
-                    md += f"- **ID**: {match['document_id']}\n"
-                    md += f"- **Similarity**: {match['score']:.4f}\n"
-                    if match["metadata"]:
-                        md += f"- **Metadata**: `{json.dumps(match['metadata'])}`\n"
-                    md += "\n"
+                result["message"] = "No documents found."
+                return json.dumps(result, ensure_ascii=False)
 
-            return md
+            for i, match in enumerate(matches, 1):
+                item = {
+                    "index": i,
+                    "id": match.get("document_id"),
+                    "similarity": round(match.get("score", 0), 4),
+                }
+
+                if match.get("metadata"):
+                    item["metadata"] = match.get("metadata")
+
+                result["results"].append(item)
+
+            return json.dumps(result, ensure_ascii=False)
 
     except UnexpectedResponse as e:
         if "not found" in str(e).lower():
@@ -298,20 +305,27 @@ async def qdrant_list_collections(params: ListCollectionsInput, ctx: Context) ->
                 "collections": collection_list,
             }, indent=2)
         else:
-            # Markdown format
-            md = f"# Qdrant Collections\n\n"
-            md += f"Total collections: {len(collection_list)}\n\n"
+            # JSON format
+            result = {
+                "total": len(collection_list),
+                "collections": []
+            }
 
             if not collection_list:
-                md += "No collections found."
-            else:
-                md += "| Collection | Points | Vectors | Vector Size |\n"
-                md += "|---|---|---|---|\n"
-                for c in collection_list:
-                    vector_size = c.get("vector_size", "?")
-                    md += f"| {c['name']} | {c['points_count']} | {c['vectors_count']} | {vector_size} |\n"
+                result["message"] = "No collections found."
+                return json.dumps(result, ensure_ascii=False)
 
-            return md
+            for c in collection_list:
+                item = {
+                    "name": c.get("name"),
+                    "points": c.get("points_count", 0),
+                    "vectors": c.get("vectors_count", 0),
+                    "vector_size": c.get("vector_size", None)
+                }
+
+                result["collections"].append(item)
+
+            return json.dumps(result, ensure_ascii=False)
 
     except Exception as e:
         await ctx.error(f"Failed to list collections: {type(e).__name__}: {e}")
