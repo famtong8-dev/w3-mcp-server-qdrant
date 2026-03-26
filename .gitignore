@@ -140,7 +140,6 @@ qdrant_mcp_server.egg-info/
 
 # uv (Python package manager)
 .venv/
-uv.lock
 
 # MCP development
 .mcp.json
