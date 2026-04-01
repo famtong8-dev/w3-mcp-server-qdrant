@@ -1312,7 +1312,7 @@ wheels = [
 
 [[package]]
 name = "w3-mcp-server-qdrant"
-version = "0.1.5"
+version = "0.1.6"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

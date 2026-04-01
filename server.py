@@ -89,6 +89,10 @@ class SearchInput(BaseModel):
         ge=0.0,
         le=1.0,
     )
+    fields: str = Field(
+        default="",
+        description="Comma-separated metadata fields to return (e.g., 'title,author,date'). Leave empty to return all fields.",
+    )
     response_format: ResponseFormat = Field(
         default=ResponseFormat.MARKDOWN,
         description="Output format: 'markdown' or 'json'",
@@ -142,6 +146,7 @@ async def qdrant_search(params: SearchInput, ctx: Context) -> str:
             - query_text (str): Text to search for (auto-embedded)
             - limit (int): Max results, 1-100 (default: 5)
             - score_threshold (float): Min similarity 0.0-1.0 (default: 0.0)
+            - fields (str): Comma-separated metadata fields to return (optional)
             - response_format (str): 'markdown' or 'json'
 
     Returns:
@@ -150,6 +155,7 @@ async def qdrant_search(params: SearchInput, ctx: Context) -> str:
     Examples:
         - Search: query_text="machine learning algorithms"
         - Filter: score_threshold=0.5 (exclude low-relevance results)
+        - Select fields: fields="title,author,date" (return only these fields)
 
     Errors:
         - Collection not found: "Collection 'xyz' does not exist"
@@ -183,8 +189,16 @@ async def qdrant_search(params: SearchInput, ctx: Context) -> str:
             match = {
                 "document_id": result.id,
                 "score": result.score,
-                "metadata": result.payload,
             }
+
+            # Filter fields if specified
+            if params.fields:
+                field_list = [f.strip() for f in params.fields.split(",")]
+                filtered_payload = {k: v for k, v in result.payload.items() if k in field_list}
+                match["metadata"] = filtered_payload
+            else:
+                match["metadata"] = result.payload
+
             matches.append(match)
 
         if params.response_format == ResponseFormat.JSON:
